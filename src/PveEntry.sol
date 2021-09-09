@@ -4,7 +4,7 @@ import "ds-auth/auth.sol";
 import "./interfaces/ISettingsRegistry.sol";
 import "./interfaces/ITokenUse.sol";
 
-contract Pve is DSAuth {
+contract PveEntry is DSAuth {
     event Join(uint256 tokenId);
     event Exit(uint256 tokenId);
 
