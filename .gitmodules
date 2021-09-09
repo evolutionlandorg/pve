@@ -4,3 +4,6 @@
 [submodule "lib/ds-auth"]
 	path = lib/ds-auth
 	url = https://github.com/dapphub/ds-auth
+[submodule "lib/zeppelin-solidity"]
+	path = lib/zeppelin-solidity
+	url = https://github.com/OpenZeppelin/zeppelin-solidity
