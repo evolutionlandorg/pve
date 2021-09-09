@@ -1,6 +1,8 @@
 pragma solidity ^0.6.7;
 
+import "ds-auth/auth.sol";
 import "./interfaces/ISettingsRegistry.sol";
+import "./interfaces/ITokenUse.sol";
 
 contract Pve is DSAuth {
     event Join(uint256 tokenId);
@@ -12,7 +14,7 @@ contract Pve is DSAuth {
     ISettingsRegistry public registry;
 
     constructor(address _registry) public {
-        registry = _registry;
+        registry = ISettingsRegistry(_registry);
     }
 
     function join(uint256 _tokenId) public {
@@ -36,6 +38,6 @@ contract Pve is DSAuth {
 	}
 
     function setRegistry(address _registry) public auth {
-        registry = _registry;
+        registry = ISettingsRegistry(_registry);
     }
 }
