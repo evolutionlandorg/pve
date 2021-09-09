@@ -17,12 +17,12 @@ contract PveEntry is Initializable, ERC165, DSAuth {
 
     ISettingsRegistry public registry;
 
-	function initialize(address _registry) public initializer {
-		owner = msg.sender;
-		emit LogSetOwner(msg.sender);
+    function initialize(address _registry) public initializer {
+        owner = msg.sender;
+        emit LogSetOwner(msg.sender);
         registry = ISettingsRegistry(_registry);
 
-		_registerInterface(InterfaceId_IActivity);
+        _registerInterface(InterfaceId_IActivity);
     }
 
     function join(uint256 _tokenId) public {
