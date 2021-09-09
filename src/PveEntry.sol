@@ -1,13 +1,16 @@
 pragma solidity ^0.6.7;
 
 import "zeppelin-solidity/proxy/Initializable.sol";
+import "zeppelin-solidity/introspection/ERC165.sol";
 import "ds-auth/auth.sol";
 import "./interfaces/ISettingsRegistry.sol";
 import "./interfaces/ITokenUse.sol";
 
-contract PveEntry is Initializable, DSAuth {
+contract PveEntry is Initializable, ERC165, DSAuth {
     event Join(uint256 tokenId);
     event Exit(uint256 tokenId);
+
+    bytes4 internal constant InterfaceId_IActivity = 0x6086e7f8; 
 
     // 0x434f4e54524143545f544f4b454e5f5553450000000000000000000000000000
     bytes32 public constant CONTRACT_TOKEN_USE = "CONTRACT_TOKEN_USE";
@@ -18,6 +21,8 @@ contract PveEntry is Initializable, DSAuth {
 		owner = msg.sender;
 		emit LogSetOwner(msg.sender);
         registry = ISettingsRegistry(_registry);
+
+		_registerInterface(InterfaceId_IActivity);
     }
 
     function join(uint256 _tokenId) public {
