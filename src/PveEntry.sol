@@ -25,6 +25,18 @@ contract PveEntry is Initializable, ERC165, DSAuth {
         _registerInterface(InterfaceId_IActivity);
     }
 
+    function joins(uint256[] calldata _tokenIds) external {
+        for(uint256 i = 0; i < _tokenIds.length; i++) {
+            join(_tokenIds[i]);
+        }
+    }
+
+    function exits(uint256[] calldata _tokenIds) external {
+        for(uint256 i = 0; i < _tokenIds.length; i++) {
+            exit(_tokenIds[i]);
+        }
+    }
+
     function join(uint256 _tokenId) public {
         address tokenuse = registry.addressOf(CONTRACT_TOKEN_USE);
         ITokenUse(tokenuse).addActivity(_tokenId, msg.sender, 0);
