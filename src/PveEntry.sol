@@ -1,10 +1,11 @@
 pragma solidity ^0.6.7;
 
+import "zeppelin-solidity/proxy/Initializable.sol";
 import "ds-auth/auth.sol";
 import "./interfaces/ISettingsRegistry.sol";
 import "./interfaces/ITokenUse.sol";
 
-contract PveEntry is DSAuth {
+contract PveEntry is Initializable, DSAuth {
     event Join(uint256 tokenId);
     event Exit(uint256 tokenId);
 
@@ -13,7 +14,9 @@ contract PveEntry is DSAuth {
 
     ISettingsRegistry public registry;
 
-    constructor(address _registry) public {
+	function initialize(address _registry) public initializer {
+		owner = msg.sender;
+		emit LogSetOwner(msg.sender);
         registry = ISettingsRegistry(_registry);
     }
 
