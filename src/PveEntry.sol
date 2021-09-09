@@ -44,8 +44,4 @@ contract PveEntry is Initializable, ERC165, DSAuth {
     function activityStopped(uint256 _tokenId) public auth {
         emit Exit(_tokenId);
     }
-
-    function setRegistry(address _registry) public auth {
-        registry = ISettingsRegistry(_registry);
-    }
 }
