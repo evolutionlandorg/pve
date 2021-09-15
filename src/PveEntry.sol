@@ -45,15 +45,16 @@ contract PveEntry is Initializable, ERC165, DSAuth {
 
     function exit(uint256 _tokenId) public {
         address tokenuse = registry.addressOf(CONTRACT_TOKEN_USE);
+        emit Exit(_tokenId);
         ITokenUse(tokenuse).removeActivity(_tokenId, msg.sender);
     }
 
     function evict(uint256 _tokenId) public {
         address tokenuse = registry.addressOf(CONTRACT_TOKEN_USE);
+        emit Exit(_tokenId);
         ITokenUse(tokenuse).removeTokenUseAndActivity(_tokenId);
     }
 
     function activityStopped(uint256 _tokenId) public auth {
-        emit Exit(_tokenId);
     }
 }
