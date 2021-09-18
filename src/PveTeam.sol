@@ -7,27 +7,26 @@ import "./interfaces/ISettingsRegistry.sol";
 import "./interfaces/ITokenUse.sol";
 
 contract PveTeam is Initializable, ERC165, DSAuth {
-    
     event Join(address user, uint256 slot, uint256 tokenId);
     event Exit(address user, uint256 slot, uint256 tokenId);
 
     bytes4 internal constant InterfaceId_IActivity = 0x6086e7f8; 
-
     // 0x434f4e54524143545f544f4b454e5f5553450000000000000000000000000000
-    bytes32 public constant CONTRACT_TOKEN_USE = "CONTRACT_TOKEN_USE";
+    bytes32 internal constant CONTRACT_TOKEN_USE = "CONTRACT_TOKEN_USE";
+
     uint256 public constant TEAM_ID = 1; 
     uint256 public constant MAX_TEAM_SIZE = 4;
 
-    ISettingsRegistry public registry;
 
     struct TeamInfo {
         address user;
         uint256 slot;
     }
 
+    ISettingsRegistry public registry;
     // user => (slot => tokenId)
     mapping (address => mapping(uint256 => uint256)) public teams;
-
+    // tokenId => info
     mapping (uint256 => TeamInfo) public infos; 
 
     function initialize(address _registry) public initializer {
