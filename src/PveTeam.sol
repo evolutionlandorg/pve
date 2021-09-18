@@ -17,7 +17,6 @@ contract PveTeam is Initializable, ERC165, DSAuth {
     uint256 public constant TEAM_ID = 1; 
     uint256 public constant MAX_TEAM_SIZE = 4;
 
-
     struct TeamInfo {
         address user;
         uint256 slot;
