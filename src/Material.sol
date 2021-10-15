@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.6.7;
 
 import "zeppelin-solidity/token/ERC1155/ERC1155.sol";
@@ -13,7 +15,7 @@ contract Material is Initializable, DSAuth, Pausable, ERC1155(""), ERC1155Supply
     bytes4 private constant _INTERFACE_ID_ERC1155 = 0xd9b67a26;
     bytes4 private constant _INTERFACE_ID_ERC1155_METADATA_URI = 0x0e89341c;
     // 0x434f4e54524143545f494e5445525354454c4c41525f454e434f444552000000
-    bytes32 internal constant CONTRACT_INTERSTELLAR_ENCODER = "CONTRACT_INTERSTELLAR_ENCODER";
+    bytes32 private constant CONTRACT_INTERSTELLAR_ENCODER = "CONTRACT_INTERSTELLAR_ENCODER";
 
     ISettingsRegistry public registry;
 
@@ -70,6 +72,14 @@ contract Material is Initializable, DSAuth, Pausable, ERC1155(""), ERC1155Supply
         uint256[] memory amounts
     ) internal override(ERC1155, ERC1155Supply) {
         ERC1155Supply._burnBatch(account, ids, amounts);
+    }
+
+    function _beforeTokenTransfer(address operator, address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
+        internal
+        whenNotPaused
+        override
+    {
+        super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
     }
 
     function mint(address account, uint256 id, uint256 amount, bytes memory data)
