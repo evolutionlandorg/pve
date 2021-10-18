@@ -2,13 +2,13 @@
 
 pragma solidity ^0.6.7;
 
-import "zeppelin-solidity/utils/ReentrancyGuard.sol";
+import "zeppelin-solidity/proxy/Initializable.sol";
 import "zeppelin-solidity/token/ERC20/IERC20.sol";
 import "ds-stop/stop.sol";
 import "./interfaces/ISettingsRegistry.sol";
 import "./interfaces/IMaterial.sol";
 
-contract MaterialTakeBack is DSStop, ReentrancyGuard {
+contract MaterialTakeBack is Initializable, DSStop {
     event TakebackMaterial(
         address account,
         uint256 id,
@@ -23,6 +23,11 @@ contract MaterialTakeBack is DSStop, ReentrancyGuard {
 
 	bytes32 private constant CONTRACT_MATERIAL = "CONTRACT_MATERIAL";
 
+    uint256 private constant _NOT_ENTERED = 1;
+    uint256 private constant _ENTERED = 2;
+
+    uint256 private _status;
+
 	ISettingsRegistry public registry;
 	address public supervisor;
 	uint256 public networkId;
@@ -30,10 +35,26 @@ contract MaterialTakeBack is DSStop, ReentrancyGuard {
     mapping(uint256 => mapping(address => uint256)) rewards;
 
 	modifier isHuman() {
-		// solhint-disable-next-line avoid-tx-origin
 		require(msg.sender == tx.origin, "robot is not permitted");
 		_;
 	}
+
+    modifier nonReentrant() {
+        require(_status != _ENTERED, "ReentrancyGuard: reentrant call");
+        _status = _ENTERED;
+        _;
+        _status = _NOT_ENTERED;
+    }
+
+    function initialize(address _registry, address _supervisor, uint256 _networkId) public initializer {
+        owner = msg.sender;
+        emit LogSetOwner(msg.sender);
+        registry = ISettingsRegistry(_registry);
+        supervisor = _supervisor;
+        networkId = _networkId;
+
+        _status = _NOT_ENTERED;
+    }
 
 	// _hashmessage = hash("${address(this)}{_user}${networkid}${ids[]}${grade[]}")
 	// _v, _r, _s are from supervisor's signature on _hashmessage
