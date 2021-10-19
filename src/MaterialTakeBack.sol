@@ -11,9 +11,10 @@ import "./interfaces/IMaterial.sol";
 contract MaterialTakeBack is Initializable, DSStop {
     event TakebackMaterial(
         address account,
-        uint256 id,
-        uint256 tokenId,
-        uint256 amount
+        uint256 nonce,
+        uint128[] ids,
+        uint256[] tokenIds,
+        uint256[] amounts
     );
     event ClaimedTokens(
         address indexed token,
@@ -32,7 +33,7 @@ contract MaterialTakeBack is Initializable, DSStop {
     address public supervisor;
     uint256 public networkId;
 
-    mapping(uint256 => mapping(address => uint256)) rewards;
+    mapping(address => uint256) userToNonce;
 
     modifier isHuman() {
         require(msg.sender == tx.origin, "robot is not permitted");
@@ -56,48 +57,41 @@ contract MaterialTakeBack is Initializable, DSStop {
         _status = _NOT_ENTERED;
     }
 
-    // _hashmessage = hash("${address(this)}{_user}${networkid}${ids[]}${rewards[]}")
+    // _hashmessage = hash("${address(this)}{_user}${networkid}${ids[]}${amounts[]}")
     // _v, _r, _s are from supervisor's signature on _hashmessage
     // takeback(...) is invoked by the user who want to claim material.
     // while the _hashmessage is signed by supervisor
     function takeback(
-        uint256[] memory _ids,
-        uint16[] memory _rewards,
+        uint256 _nonce,
+        uint128[] memory _ids,
+        uint256[] memory _amounts,
         bytes32 _hashmessage,
         uint8 _v,
         bytes32 _r,
         bytes32 _s
     ) public nonReentrant isHuman stoppable {
         address _user = msg.sender;
+        require(userToNonce[_user] == _nonce);
         // verify the _hashmessage is signed by supervisor
         require(
             supervisor == _verify(_hashmessage, _v, _r, _s),
             "verify failed"
         );
-        // verify that the address(this), _user, networkId, _ids, _rewards are exactly what they should be
+        // verify that the address(this), _user, networkId, _ids, _amounts are exactly what they should be
         require(
             keccak256(
-                abi.encodePacked(address(this), _user, networkId, _ids, _rewards)
+                abi.encodePacked(address(this), _user, _nonce, networkId, _ids, _amounts)
             ) == _hashmessage,
             "hash invaild"
         );
-        require(_ids.length == _rewards.length, "length invalid.");
-        require(_rewards.length > 0, "no rewards");
-        for (uint256 i = 0; i < _ids.length; i++) {
-            uint256 id = _ids[i];
-            uint256 reward = _rewards[i];
-            uint256 oldReward = rewards[id][_user];
-            require(oldReward < reward, "no reward");
-            uint256 amount = reward - oldReward;
-            rewards[id][_user] = reward;
-            uint256 tokenId = _rewardMaterial(_user, id, amount);
-            emit TakebackMaterial(_user, id, tokenId, amount);
-        }
+        userToNonce[_user] += 1;
+        uint256[] memory tokenIds = _rewardMaterial(_user, _ids, _amounts);
+        emit TakebackMaterial(_user, _nonce, _ids, tokenIds, _amounts);
     }
 
-    function _rewardMaterial(address account, uint256 id, uint256 amount) internal returns (uint256) {
+    function _rewardMaterial(address account, uint128[] memory ids, uint256[] memory amounts) internal returns (uint256[] memory) {
         address material = registry.addressOf(CONTRACT_MATERIAL);
-        return IMaterial(material).mintObject(account, id, amount, "");
+        return IMaterial(material).mintObjectBatch(account, ids, amounts, "");
     }
 
     function _verify(
