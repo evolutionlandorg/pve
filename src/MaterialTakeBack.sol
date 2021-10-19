@@ -12,9 +12,9 @@ contract MaterialTakeBack is Initializable, DSStop {
     event TakebackMaterial(
         address account,
         uint256 nonce,
-        uint128[] ids,
-        uint256[] tokenIds,
-        uint256[] amounts
+        uint128 id,
+        uint256 tokenId,
+        uint256 amount
     );
     event ClaimedTokens(
         address indexed token,
@@ -84,14 +84,20 @@ contract MaterialTakeBack is Initializable, DSStop {
             ) == _hashmessage,
             "hash invaild"
         );
+        require(_ids.length == _amounts.length, "invaild length");
+        require(_ids.length > 0, "no id");
         userToNonce[_user] += 1;
-        uint256[] memory tokenIds = _rewardMaterial(_user, _ids, _amounts);
-        emit TakebackMaterial(_user, _nonce, _ids, tokenIds, _amounts);
+        for (uint256 i = 0; i < _ids.length; i++) {
+            uint128 id = _ids[i];
+            uint256 amount = _amounts[i];
+            uint256 tokenId = _rewardMaterial(_user, id, amount);
+            emit TakebackMaterial(_user, _nonce, id, tokenId, amount);
+        }
     }
 
-    function _rewardMaterial(address account, uint128[] memory ids, uint256[] memory amounts) internal returns (uint256[] memory) {
+    function _rewardMaterial(address account, uint128 id, uint256 amount) internal returns (uint256) {
         address material = registry.addressOf(CONTRACT_MATERIAL);
-        return IMaterial(material).mintObjectBatch(account, ids, amounts, "");
+        return IMaterial(material).mintObject(account, id, amount, "");
     }
 
     function _verify(
