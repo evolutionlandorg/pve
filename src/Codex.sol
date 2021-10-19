@@ -3,11 +3,11 @@
 pragma solidity ^0.6.7;
 
 contract Codex {
-	uint256 private constant _CLEAR_HIGH = 0x00000000000000000000000000000000ffffffffffffffffffffffffffffffff;
+    uint256 private constant _CLEAR_HIGH = 0x00000000000000000000000000000000ffffffffffffffffffffffffffffffff;
     string public constant class = "Material";
 
     function name(uint256 tokenId) public pure returns(bytes memory) {
-		uint128 id = uint128(tokenId & _CLEAR_HIGH);
+        uint128 id = uint128(tokenId & _CLEAR_HIGH);
         if (id == 1) {
             return "Junior Monster Bone";
         } else if (id == 2) {
