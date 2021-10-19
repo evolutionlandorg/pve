@@ -56,7 +56,7 @@ contract MaterialTakeBack is Initializable, DSStop {
         _status = _NOT_ENTERED;
     }
 
-	// _hashmessage = hash("${address(this)}{_user}${networkid}${ids[]}${grade[]}")
+	// _hashmessage = hash("${address(this)}{_user}${networkid}${ids[]}${rewards[]}")
 	// _v, _r, _s are from supervisor's signature on _hashmessage
 	// takeback(...) is invoked by the user who want to clain drill.
 	// while the _hashmessage is signed by supervisor
@@ -74,7 +74,7 @@ contract MaterialTakeBack is Initializable, DSStop {
 			supervisor == _verify(_hashmessage, _v, _r, _s),
 			"verify failed"
 		);
-		// verify that the address(this), _user, networkId, _ids, _grades are exactly what they should be
+		// verify that the address(this), _user, networkId, _ids, _rewards are exactly what they should be
 		require(
 			keccak256(
 				abi.encodePacked(address(this), _user, networkId, _ids, _rewards)
