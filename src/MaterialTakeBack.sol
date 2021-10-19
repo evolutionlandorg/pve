@@ -58,7 +58,7 @@ contract MaterialTakeBack is Initializable, DSStop {
 
     // _hashmessage = hash("${address(this)}{_user}${networkid}${ids[]}${rewards[]}")
     // _v, _r, _s are from supervisor's signature on _hashmessage
-    // takeback(...) is invoked by the user who want to clain drill.
+    // takeback(...) is invoked by the user who want to claim material.
     // while the _hashmessage is signed by supervisor
     function takeback(
         uint256[] memory _ids,
