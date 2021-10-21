@@ -14,8 +14,8 @@ contract Material is Initializable, DSAuth, Pausable, ERC1155(""), ERC1155Supply
 
     bytes4 private constant _INTERFACE_ID_ERC1155 = 0xd9b67a26;
     bytes4 private constant _INTERFACE_ID_ERC1155_METADATA_URI = 0x0e89341c;
-    // 0x434f4e54524143545f494e5445525354454c4c41525f454e434f444552000000
     bytes32 private constant CONTRACT_INTERSTELLAR_ENCODER = "CONTRACT_INTERSTELLAR_ENCODER";
+    bytes32 private constant CONTRACT_MATERIAL_CODEX = "CONTRACT_MATERIAL_CODEX";
 
     ISettingsRegistry public registry;
 
@@ -116,8 +116,9 @@ contract Material is Initializable, DSAuth, Pausable, ERC1155(""), ERC1155Supply
         returns (uint256 tokenId)
     {
         address interstellarEncoder = registry.addressOf(CONTRACT_INTERSTELLAR_ENCODER);
+        address codex = registry.addressOf(CONTRACT_MATERIAL_CODEX);
 
-        tokenId = IInterstellarEncoder(interstellarEncoder).encodeTokenIdForObjectContract(address(this), msg.sender, id);
+        tokenId = IInterstellarEncoder(interstellarEncoder).encodeTokenIdForObjectContract(address(this), codex, id);
         _mint(account, tokenId, amount, data);
     }
 
@@ -127,8 +128,9 @@ contract Material is Initializable, DSAuth, Pausable, ERC1155(""), ERC1155Supply
         returns (uint256 tokenId)
     {
         address interstellarEncoder = registry.addressOf(CONTRACT_INTERSTELLAR_ENCODER);
+        address codex = registry.addressOf(CONTRACT_MATERIAL_CODEX);
 
-        tokenId = IInterstellarEncoder(interstellarEncoder).encodeTokenIdForObjectContract(address(this), msg.sender, id);
+        tokenId = IInterstellarEncoder(interstellarEncoder).encodeTokenIdForObjectContract(address(this), codex, id);
         _burn(account, tokenId, value);
     }
 
@@ -138,10 +140,11 @@ contract Material is Initializable, DSAuth, Pausable, ERC1155(""), ERC1155Supply
         returns (uint256[] memory tokenIds)
     {
         address interstellarEncoder = registry.addressOf(CONTRACT_INTERSTELLAR_ENCODER);
+        address codex = registry.addressOf(CONTRACT_MATERIAL_CODEX);
 
         tokenIds = new uint256[](ids.length);
         for (uint256 i = 0; i < ids.length; i++) {
-            tokenIds[i] = IInterstellarEncoder(interstellarEncoder).encodeTokenIdForObjectContract(address(this), msg.sender, ids[i]);
+            tokenIds[i] = IInterstellarEncoder(interstellarEncoder).encodeTokenIdForObjectContract(address(this), codex, ids[i]);
         }
         _mintBatch(account, tokenIds, amounts, data);
     }
@@ -152,10 +155,11 @@ contract Material is Initializable, DSAuth, Pausable, ERC1155(""), ERC1155Supply
         returns (uint256[] memory tokenIds)
     {
         address interstellarEncoder = registry.addressOf(CONTRACT_INTERSTELLAR_ENCODER);
+        address codex = registry.addressOf(CONTRACT_MATERIAL_CODEX);
 
         tokenIds = new uint256[](ids.length);
         for (uint256 i = 0; i < ids.length; i++) {
-            tokenIds[i] = IInterstellarEncoder(interstellarEncoder).encodeTokenIdForObjectContract(address(this), msg.sender, ids[i]);
+            tokenIds[i] = IInterstellarEncoder(interstellarEncoder).encodeTokenIdForObjectContract(address(this), codex, ids[i]);
         }
         _burnBatch(account, tokenIds, values);
     }
