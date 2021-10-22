@@ -163,4 +163,14 @@ contract Material is Initializable, DSAuth, Pausable, ERC1155(""), ERC1155Supply
         }
         _burnBatch(account, tokenIds, values);
     }
+
+    function encode(uint128 id) external view returns (uint256) {
+        address interstellarEncoder = registry.addressOf(CONTRACT_INTERSTELLAR_ENCODER);
+        address codex = registry.addressOf(CONTRACT_MATERIAL_CODEX);
+        return IInterstellarEncoder(interstellarEncoder).encodeTokenIdForObjectContract(address(this), codex, id);
+    }
+
+    function decode(uint256 tokenId) external pure returns (uint256) {
+        return uint128(tokenId & 0x00000000000000000000000000000000ffffffffffffffffffffffffffffffff);
+    }
 }
