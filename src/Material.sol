@@ -170,7 +170,7 @@ contract Material is Initializable, DSAuth, Pausable, ERC1155(""), ERC1155Supply
         return IInterstellarEncoder(interstellarEncoder).encodeTokenIdForObjectContract(address(this), codex, id);
     }
 
-    function decode(uint256 tokenId) external pure returns (uint256) {
+    function decode(uint256 tokenId) external pure returns (uint128) {
         return uint128(tokenId & 0x00000000000000000000000000000000ffffffffffffffffffffffffffffffff);
     }
 }
