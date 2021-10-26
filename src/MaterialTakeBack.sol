@@ -71,7 +71,7 @@ contract MaterialTakeBack is Initializable, DSStop {
         bytes32 _s
     ) public nonReentrant isHuman stoppable {
         address _user = msg.sender;
-        require(userToNonce[_user] == _nonce);
+        require(userToNonce[_user] == _nonce, "invaild nonce");
         // verify the _hashmessage is signed by supervisor
         require(
             supervisor == _verify(_hashmessage, _v, _r, _s),
