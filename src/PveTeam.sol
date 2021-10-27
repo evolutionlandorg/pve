@@ -54,6 +54,7 @@ contract PveTeam is Initializable, ERC165, DSAuth {
 
     function join(uint256 slot, uint256 tokenId) public {
         address tokenuse = registry.addressOf(CONTRACT_TOKEN_USE);
+        require(ITokenUse(tokenuse).getTokenUser(tokenId) == address(0), "Team: HIRE_FORBIDDEN");
         ITokenUse(tokenuse).addActivity(tokenId, msg.sender, 0);
         require(slot < MAX_TEAM_SIZE, "Team: INVALID_SLOT");
         require(teams[msg.sender][slot] == 0, "Team: OCCUPIED");
