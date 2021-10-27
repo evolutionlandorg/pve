@@ -28,10 +28,14 @@ contract PveTeam is Initializable, ERC165, DSAuth {
     // tokenId => info
     mapping (uint256 => TeamInfo) public infos;
 
+    mapping(address => uint256) public teamLock;
+    uint256 public lock;
+
     function initialize(address _registry) public initializer {
         owner = msg.sender;
         emit LogSetOwner(msg.sender);
         registry = ISettingsRegistry(_registry);
+        lock = 1 days;
 
         _registerInterface(InterfaceId_IActivity);
     }
@@ -58,12 +62,16 @@ contract PveTeam is Initializable, ERC165, DSAuth {
             user: msg.sender,
             slot: slot
         });
+        if (fullTeam(msg.sender)) {
+            teamLock[msg.sender] = block.timestamp + lock;
+        }
         emit Join(msg.sender, slot, tokenId);
     }
 
     function _exit(uint256 tokenId) internal {
         TeamInfo memory info = infos[tokenId];
         require(tokenId != 0, "Team: EMPTY");
+        require(unlocked(info.user), "Team: LOCKED");
         delete teams[info.user][info.slot];
         delete infos[tokenId];
         emit Exit(info.user, info.slot, tokenId);
@@ -84,12 +92,30 @@ contract PveTeam is Initializable, ERC165, DSAuth {
         _exit(tokenId);
     }
 
+    function setLock(uint256 newlock) auth public {
+        lock = newlock;
+    }
+
     function at(address user, uint256 slot) public view returns (uint256) {
         return teams[user][slot];
     }
 
     function exist(address user, uint256 slot) public view returns (bool) {
         return teams[user][slot] != 0;
+    }
+
+    function fullTeam(address user) public view returns (bool) {
+        uint256 count = 0;
+        for (uint256 slot = 0; slot < MAX_TEAM_SIZE; slot++) {
+            if exist(user, slot) {
+                count++;
+            }
+        }
+        return count == MAX_TEAM_SIZE;
+    }
+
+    function unlocked(address user) public view returns (bool) {
+        return teamLock[info.user] < block.timestamp;
     }
 
 }
