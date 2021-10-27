@@ -107,7 +107,7 @@ contract PveTeam is Initializable, ERC165, DSAuth {
     function fullTeam(address user) public view returns (bool) {
         uint256 count = 0;
         for (uint256 slot = 0; slot < MAX_TEAM_SIZE; slot++) {
-            if exist(user, slot) {
+            if (exist(user, slot)) {
                 count++;
             }
         }
@@ -115,7 +115,7 @@ contract PveTeam is Initializable, ERC165, DSAuth {
     }
 
     function unlocked(address user) public view returns (bool) {
-        return teamLock[info.user] < block.timestamp;
+        return teamLock[user] < block.timestamp;
     }
 
 }
