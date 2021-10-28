@@ -72,6 +72,7 @@ contract PveTeam is Initializable, ERC165, DSAuth {
 
     function _exit(uint256 tokenId) internal {
         TeamInfo memory info = infos[tokenId];
+        require(infos[tokenId].user != address(0), "Team: NOT_INTEAM");
         require(tokenId != 0, "Team: EMPTY");
         require(unlocked(info.user), "Team: LOCKED");
         delete teams[info.user][info.slot];
