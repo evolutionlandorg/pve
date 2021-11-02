@@ -105,7 +105,7 @@ contract MaterialTakeBack is Initializable, DSStop {
         uint8 _v,
         bytes32 _r,
         bytes32 _s
-    ) internal pure returns (address) {
+    ) public pure returns (address) {
         bytes memory prefix = "\x19EvolutionLand Signed Message:\n32";
         bytes32 prefixedHash =
             keccak256(abi.encodePacked(prefix, _hashmessage));
