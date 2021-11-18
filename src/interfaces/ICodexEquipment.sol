@@ -1,7 +1,7 @@
 pragma solidity ^0.6.7;
 pragma experimental ABIEncoderV2;
 
-interface codex_equipment {
+interface ICodexEquipment {
     struct equipment {
         uint256 id;
         uint256[] materials;
