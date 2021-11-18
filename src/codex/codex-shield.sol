@@ -26,7 +26,7 @@ contract codex {
 
     function shield1() public pure returns (shield memory _s) {
         _s.id = 1;
-        _s.name = "Shield, normal";
+        _s.name = "Wooden Shield, normal";
         _s.materials = new uint256[](2);
         _s.materials[0] = 1;
         _s.materials[1] = 4;
@@ -39,7 +39,7 @@ contract codex {
 
     function shield2() public pure returns (shield memory _s) {
         _s.id = 2;
-        _s.name = "Shield, rare";
+        _s.name = "Steel Shield, rare";
         _s.materials = new uint256[](2);
         _s.materials[0] = 1;
         _s.materials[1] = 4;
@@ -52,7 +52,7 @@ contract codex {
 
     function shield3() public pure returns (shield memory _s) {
         _s.id = 3;
-        _s.name = "Shield, epic";
+        _s.name = "Aurora Shield, epic";
         _s.materials = new uint256[](2);
         _s.materials[0] = 2;
         _s.materials[1] = 5;

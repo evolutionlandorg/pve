@@ -26,7 +26,7 @@ contract codex {
 
     function sword1() public pure returns (sword memory _s) {
         _s.id = 1;
-        _s.name = "Sword, normal";
+        _s.name = "Wooden Sword, normal";
         _s.materials = new uint256[](2);
         _s.materials[0] = 1;
         _s.materials[1] = 4;
@@ -39,7 +39,7 @@ contract codex {
 
     function sword2() public pure returns (sword memory _s) {
         _s.id = 2;
-        _s.name = "Sword, rare";
+        _s.name = "Steel Sword, rare";
         _s.materials = new uint256[](2);
         _s.materials[0] = 1;
         _s.materials[1] = 4;
@@ -52,7 +52,7 @@ contract codex {
 
     function sword3() public pure returns (sword memory _s) {
         _s.id = 3;
-        _s.name = "Sword, epic";
+        _s.name = "Aurora Sword, epic";
         _s.materials = new uint256[](2);
         _s.materials[0] = 2;
         _s.materials[1] = 5;

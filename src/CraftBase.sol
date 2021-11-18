@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 import "zeppelin-solidity/proxy/Initializable.sol";
 import "zeppelin-solidity/token/ERC1155/IERC1155.sol";
 import "zeppelin-solidity/token/ERC1155/IERC1155Receiver.sol";
-import "ds-auth/auth.sol";
+import "ds-stop/stop.sol";
 import "./interfaces/ISettingsRegistry.sol";
 import "./interfaces/IObjectOwnership.sol";
 import "./interfaces/ICodexEquipment.sol";
@@ -12,7 +12,7 @@ import "./interfaces/ICodexRandom.sol";
 import "./interfaces/IMaterial.sol";
 import "./interfaces/ILandBase.sol";
 
-contract CraftBase is Initializable, DSAuth {
+contract CraftBase is Initializable, DSStop {
 	event Crafted(address to, uint256 tokenId, uint256 obj_id, uint256 grade, uint256 timestamp);
 
     bytes32 private constant CONTRACT_MATERIAL = "CONTRACT_MATERIAL";
@@ -31,6 +31,11 @@ contract CraftBase is Initializable, DSAuth {
 	ISettingsRegistry public registry;
     uint256 public lastEquipmentId;
     mapping(uint256 => Attr) public attrs;
+
+    modifier isHuman() {
+        require(msg.sender == tx.origin, "robot is not permitted");
+        _;
+    }
 
 	function initialize(address _registry) public initializer {
 		owner = msg.sender;
@@ -81,7 +86,7 @@ contract CraftBase is Initializable, DSAuth {
 		return tokenId;
     }
 
-    function craft(uint8 _obj_id, uint8 _grade, address _element) external returns (bool crafted, uint tokenId) {
+    function craft(uint8 _obj_id, uint8 _grade, address _element) external isHuman stoppable returns (bool crafted, uint tokenId) {
         require(isValid(_obj_id, _grade), "!valid");
         ICodexEquipment.equipment memory e = get_obj(_obj_id, _grade);
         _pay_materails(e.materials, e.mcosts);
@@ -110,5 +115,11 @@ contract CraftBase is Initializable, DSAuth {
 
     function onERC1155BatchReceived(address, address, uint256[] calldata, uint256[] calldata, bytes calldata) external pure returns(bytes4) {
         return bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"));
+    }
+
+    function getMetaData(uint256 tokenId) external view returns (uint obj_id, uint grade, uint prefer) {
+        obj_id = tokenId << 128 >> 248;
+        grade = tokenId << 136 >> 248;
+        prefer = attrs[tokenId].prefer;
     }
 }
