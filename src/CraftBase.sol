@@ -3,12 +3,13 @@ pragma experimental ABIEncoderV2;
 
 import "zeppelin-solidity/proxy/Initializable.sol";
 import "zeppelin-solidity/token/ERC1155/IERC1155.sol";
-import "zeppelin-solidity/token/ERC1155/IERC1155Receiver.sol";
+import "zeppelin-solidity/token/ERC20/IERC20.sol";
 import "ds-stop/stop.sol";
 import "./interfaces/ISettingsRegistry.sol";
 import "./interfaces/IObjectOwnership.sol";
 import "./interfaces/ICodexEquipment.sol";
 import "./interfaces/ICodexRandom.sol";
+import "./interfaces/IRevenuePool.sol";
 import "./interfaces/IMaterial.sol";
 import "./interfaces/ILandBase.sol";
 
@@ -21,7 +22,10 @@ contract CraftBase is Initializable, DSStop {
 	bytes32 private constant CONTRACT_SHIELD_CODEX = "CONTRACT_SHIELD_CODEX";
 	bytes32 private constant CONTRACT_RANDOM_CODEX = "CONTRACT_RANDOM_CODEX";
 	bytes32 private constant CONTRACT_OBJECT_OWNERSHIP = "CONTRACT_OBJECT_OWNERSHIP";
+	bytes32 private constant CONTRACT_RING_ERC20_TOKEN = "CONTRACT_RING_ERC20_TOKEN";
+    bytes32 private constant CONTRACT_REVENUE_POOL = "CONTRACT_REVENUE_POOL";
 	bytes4 private constant _SELECTOR_TRANSFERFROM = bytes4(keccak256(bytes("transferFrom(address,address,uint256)")));
+    bytes32 private constant UINT_CRAFT_FEE = "UINT_CRAFT_FEE";
 
     struct Attr {
         uint256 prefer;
@@ -74,6 +78,15 @@ contract CraftBase is Initializable, DSStop {
 		_safeTransferFrom(element, msg.sender, address(this), value);
     }
 
+    function _pay_ring() private {
+        address ring = registry.addressOf(CONTRACT_RING_ERC20_TOKEN);
+        uint256 value = registry.uintOf(UINT_CRAFT_FEE);
+        require(IERC20(ring).transferFrom(msg.sender, address(this), value));
+        address pool = registry.addressOf(CONTRACT_REVENUE_POOL);
+        IERC20(ring).approve(pool, value);
+        IRevenuePool(pool).reward(ring, value, msg.sender);
+    }
+
     function _craft_obj(address _to, uint _obj_id, uint _grade, uint _prefer) private  returns (uint) {
         require(lastEquipmentId < uint112(-1), "overflow");
         lastEquipmentId += 1;
@@ -91,6 +104,7 @@ contract CraftBase is Initializable, DSStop {
         ICodexEquipment.equipment memory e = get_obj(_obj_id, _grade);
         _pay_materails(e.materials, e.mcosts);
         uint prefer = _pay_element(_element, e.ecost);
+        _pay_ring();
         crafted = _craft_check(e.srate);
         if (crafted) {
             tokenId = _craft_obj(msg.sender, _obj_id, _grade, prefer);
