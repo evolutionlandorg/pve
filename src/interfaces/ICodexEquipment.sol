@@ -18,4 +18,5 @@ interface ICodexEquipment {
 
     function obj_by_rarity(uint rarity) external pure returns (equipment memory _e);
     function formula_by_class(uint id) external pure returns (formula memory _f);
+    function price_by_rarity(uint256 rarity) external pure returns (uint256);
 }

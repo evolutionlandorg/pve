@@ -91,4 +91,14 @@ contract codex {
         _f.cost = 800e18;
         _f.srate = 100;
     }
+
+    function price_by_rarity(uint256 id) public pure returns (uint256) {
+        if (id == 1) {
+            return 1000e18;
+        } else if (id == 2) {
+            return 2000e18;
+        } else if (id == 3) {
+            return 5000e18;
+        }
+    }
 }

@@ -29,7 +29,6 @@ contract CraftBase is Initializable, DSStop {
     bytes32 private constant CONTRACT_REVENUE_POOL = "CONTRACT_REVENUE_POOL";
 	bytes32 private constant CONTRACT_METADATA_TELLER = "CONTRACT_METADATA_TELLER";
 	bytes4 private constant _SELECTOR_TRANSFERFROM = bytes4(keccak256(bytes("transferFrom(address,address,uint256)")));
-    bytes32 private constant UINT_CRAFT_FEE = "UINT_CRAFT_FEE";
 
     struct Attr {
         uint8 obj_id;
@@ -71,7 +70,7 @@ contract CraftBase is Initializable, DSStop {
         require(IERC20(element).transferFrom(msg.sender, address(this), value));
     }
 
-    function _craft_obj(address _to, uint8 _obj_id, uint8 _rarity, uint8 _prefer) private  returns (uint) {
+    function _craft_obj(address _to, uint8 _obj_id, uint8 _rarity, uint8 _prefer) private returns (uint) {
         require(lastEquipmentId < uint128(-1), "overflow");
         lastEquipmentId += 1;
 		uint256 tokenId = IObjectOwnership(registry.addressOf(CONTRACT_OBJECT_OWNERSHIP)).mintObject(_to, uint128(lastEquipmentId));
@@ -150,12 +149,24 @@ contract CraftBase is Initializable, DSStop {
     }
 
     // buy
-    function _pay_ring() private {
+    function buy(uint8 _obj_id, uint8 _rarity, uint256 _ele) public returns (uint) {
+		require(_ele > 0 && _ele < 6, "!ele");
+        require(isValid(_obj_id, _rarity), "!valid");
+        uint256 price = get_price(_obj_id, _rarity);
         address ring = registry.addressOf(CONTRACT_RING_ERC20_TOKEN);
-        uint256 value = registry.uintOf(UINT_CRAFT_FEE);
-        require(IERC20(ring).transferFrom(msg.sender, address(this), value));
+        require(IERC20(ring).transferFrom(msg.sender, address(this), price));
         address pool = registry.addressOf(CONTRACT_REVENUE_POOL);
-        IERC20(ring).approve(pool, value);
-        IRevenuePool(pool).reward(ring, value, msg.sender);
+        IERC20(ring).approve(pool, price);
+        IRevenuePool(pool).reward(ring, price, msg.sender);
+		uint8 prefer = uint8(1 << _ele);
+        return _craft_obj(msg.sender, _obj_id, _rarity, prefer);
+    }
+
+    function get_price(uint _obj_id, uint _rarity) public view returns (uint) {
+        if (_obj_id == 1) {
+            return ICodexEquipment(registry.addressOf(CONTRACT_SWORD_CODEX)).price_by_rarity(_rarity);
+        } else if (_obj_id == 2) {
+            return ICodexEquipment(registry.addressOf(CONTRACT_SHIELD_CODEX)).price_by_rarity(_rarity);
+        }
     }
 }
