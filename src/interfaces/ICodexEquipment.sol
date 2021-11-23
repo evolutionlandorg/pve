@@ -11,5 +11,11 @@ interface ICodexEquipment {
         string name;
     }
 
-    function obj_by_id(uint id) external pure returns (equipment memory _e);
+    struct formula {
+        bytes32 minor;
+        uint256 cost;
+    }
+
+    function obj_by_rarity(uint rarity) external pure returns (equipment memory _e);
+    function formula_by_class(uint id) external pure returns (formula memory _f);
 }

@@ -3,18 +3,21 @@ pragma experimental ABIEncoderV2;
 
 import "zeppelin-solidity/proxy/Initializable.sol";
 import "zeppelin-solidity/token/ERC1155/IERC1155.sol";
+import "zeppelin-solidity/token/ERC721/IERC721.sol";
 import "zeppelin-solidity/token/ERC20/IERC20.sol";
 import "ds-stop/stop.sol";
 import "./interfaces/ISettingsRegistry.sol";
 import "./interfaces/IObjectOwnership.sol";
 import "./interfaces/ICodexEquipment.sol";
+import "./interfaces/IMetaDataTeller.sol";
 import "./interfaces/ICodexRandom.sol";
 import "./interfaces/IRevenuePool.sol";
 import "./interfaces/IMaterial.sol";
 import "./interfaces/ILandBase.sol";
 
 contract CraftBase is Initializable, DSStop {
-	event Crafted(address to, uint256 tokenId, uint256 obj_id, uint256 grade, uint256 timestamp);
+	event Crafted(address to, uint256 tokenId, uint256 obj_id, uint256 rarity, uint256 timestamp);
+    event Enchanced(uint256 id, uint8 class, uint256 timestamp);
 
     bytes32 private constant CONTRACT_MATERIAL = "CONTRACT_MATERIAL";
 	bytes32 private constant CONTRACT_LAND_BASE = "CONTRACT_LAND_BASE";
@@ -24,11 +27,15 @@ contract CraftBase is Initializable, DSStop {
 	bytes32 private constant CONTRACT_OBJECT_OWNERSHIP = "CONTRACT_OBJECT_OWNERSHIP";
 	bytes32 private constant CONTRACT_RING_ERC20_TOKEN = "CONTRACT_RING_ERC20_TOKEN";
     bytes32 private constant CONTRACT_REVENUE_POOL = "CONTRACT_REVENUE_POOL";
+	bytes32 private constant CONTRACT_METADATA_TELLER = "CONTRACT_METADATA_TELLER";
 	bytes4 private constant _SELECTOR_TRANSFERFROM = bytes4(keccak256(bytes("transferFrom(address,address,uint256)")));
     bytes32 private constant UINT_CRAFT_FEE = "UINT_CRAFT_FEE";
 
     struct Attr {
-        uint256 prefer;
+        uint8 obj_id;
+        uint8 rarity;
+        uint8 class;
+        uint8 prefer;
     }
 
 	/*** STORAGE ***/
@@ -36,25 +43,11 @@ contract CraftBase is Initializable, DSStop {
     uint256 public lastEquipmentId;
     mapping(uint256 => Attr) public attrs;
 
-    modifier isHuman() {
-        require(msg.sender == tx.origin, "robot is not permitted");
-        _;
-    }
-
 	function initialize(address _registry) public initializer {
 		owner = msg.sender;
 		emit LogSetOwner(msg.sender);
 
 		registry = ISettingsRegistry(_registry);
-	}
-
-	function _safeTransferFrom(address token, address from, address to, uint256 value) private {
-		(bool success, bytes memory data) =
-			token.call(abi.encodeWithSelector(_SELECTOR_TRANSFERFROM, from, to, value)); // solhint-disable-line
-		require(
-			success && (data.length == 0 || abi.decode(data, (bool))),
-			"Furnace: TRANSFERFROM_FAILED"
-		);
 	}
 
     function _pay_materails(uint256[] memory materials, uint256[] memory mcosts) private {
@@ -71,55 +64,49 @@ contract CraftBase is Initializable, DSStop {
         return ICodexRandom(random).d100(lastEquipmentId) < _srate;
     }
 
-    function _pay_element(address element, uint256 value) private returns (uint prefer) {
+    function _pay_element(address element, uint256 value) private returns (uint8 prefer) {
         uint256 ele = ILandBase(registry.addressOf(CONTRACT_LAND_BASE)).resourceToken2RateAttrId(element);
 		require(ele > 0 && ele < 6, "!element");
-		prefer |= 1 << ele;
-		_safeTransferFrom(element, msg.sender, address(this), value);
+		prefer = uint8(1 << ele);
+        require(IERC20(element).transferFrom(msg.sender, address(this), value));
     }
 
-    function _pay_ring() private {
-        address ring = registry.addressOf(CONTRACT_RING_ERC20_TOKEN);
-        uint256 value = registry.uintOf(UINT_CRAFT_FEE);
-        require(IERC20(ring).transferFrom(msg.sender, address(this), value));
-        address pool = registry.addressOf(CONTRACT_REVENUE_POOL);
-        IERC20(ring).approve(pool, value);
-        IRevenuePool(pool).reward(ring, value, msg.sender);
-    }
-
-    function _craft_obj(address _to, uint _obj_id, uint _grade, uint _prefer) private  returns (uint) {
-        require(lastEquipmentId < uint112(-1), "overflow");
+    function _craft_obj(address _to, uint8 _obj_id, uint8 _rarity, uint8 _prefer) private  returns (uint) {
+        require(lastEquipmentId < uint128(-1), "overflow");
         lastEquipmentId += 1;
-		uint256 objectId = _obj_id << 120 + _grade << 112 + lastEquipmentId;
-        // [6.1.1, 6.1.3] sword
-        // [6.2.1, 6.2.3] shield
-		uint256 tokenId = IObjectOwnership(registry.addressOf(CONTRACT_OBJECT_OWNERSHIP)).mintObject(_to, uint128(objectId));
-        attrs[tokenId] = Attr(_prefer);
-		emit Crafted(_to, tokenId, _obj_id, _grade, block.timestamp);
+		uint256 tokenId = IObjectOwnership(registry.addressOf(CONTRACT_OBJECT_OWNERSHIP)).mintObject(_to, uint128(lastEquipmentId));
+        attrs[tokenId] = Attr(_obj_id, _rarity, 0, _prefer);
+		emit Crafted(_to, tokenId, _obj_id, _rarity, block.timestamp);
 		return tokenId;
     }
 
-    function craft(uint8 _obj_id, uint8 _grade, address _element) external isHuman stoppable returns (bool crafted, uint tokenId) {
-        require(isValid(_obj_id, _grade), "!valid");
-        ICodexEquipment.equipment memory e = get_obj(_obj_id, _grade);
+    function _increase_class(uint id) private {
+        attrs[id].class += 1;
+        emit Enchanced(id, attrs[id].class, block.timestamp);
+    }
+
+    // crafting
+
+    function craft(uint8 _obj_id, uint8 _rarity, address _element) external stoppable returns (bool crafted, uint tokenId) {
+        require(isValid(_obj_id, _rarity), "!valid");
+        ICodexEquipment.equipment memory e = get_obj(_obj_id, _rarity);
         _pay_materails(e.materials, e.mcosts);
-        uint prefer = _pay_element(_element, e.ecost);
-        _pay_ring();
+        uint8 prefer = _pay_element(_element, e.ecost);
         crafted = _craft_check(e.srate);
         if (crafted) {
-            tokenId = _craft_obj(msg.sender, _obj_id, _grade, prefer);
+            tokenId = _craft_obj(msg.sender, _obj_id, _rarity, prefer);
         }
     }
 
-    function isValid(uint _obj_id, uint _grade) public pure returns (bool) {
-        return (1 <= _obj_id && _obj_id <= 2 && _grade >=1 && _grade <=3);
+    function isValid(uint _obj_id, uint _rarity) public pure returns (bool) {
+        return (1 <= _obj_id && _obj_id <= 2 && _rarity >=1 && _rarity <=3);
     }
 
-    function get_obj(uint _obj_id, uint _grade) public view returns (ICodexEquipment.equipment memory _e) {
+    function get_obj(uint _obj_id, uint _rarity) public view returns (ICodexEquipment.equipment memory _e) {
         if (_obj_id == 1) {
-            _e = ICodexEquipment(registry.addressOf(CONTRACT_SWORD_CODEX)).obj_by_id(_grade);
+            _e = ICodexEquipment(registry.addressOf(CONTRACT_SWORD_CODEX)).obj_by_rarity(_rarity);
         } else if (_obj_id == 2) {
-            _e = ICodexEquipment(registry.addressOf(CONTRACT_SHIELD_CODEX)).obj_by_id(_grade);
+            _e = ICodexEquipment(registry.addressOf(CONTRACT_SHIELD_CODEX)).obj_by_rarity(_rarity);
         }
     }
 
@@ -131,9 +118,44 @@ contract CraftBase is Initializable, DSStop {
         return bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"));
     }
 
-    function getMetaData(uint256 tokenId) external view returns (uint obj_id, uint grade, uint prefer) {
-        obj_id = tokenId << 128 >> 248;
-        grade = tokenId << 136 >> 248;
-        prefer = attrs[tokenId].prefer;
+    function getMetaData(uint id) external view returns (uint, uint, uint, uint) {
+        Attr memory attr = attrs[id];
+        return (attr.obj_id, attr.rarity, attr.class, attr.prefer);
+    }
+
+    function isValidClass(uint class) public pure returns (bool) {
+        return (0 <= class && class <=1);
+    }
+
+    // enchanting
+    function enchant(uint id, address _token) external returns (bool) {
+		require(msg.sender == IERC721(registry.addressOf(CONTRACT_OBJECT_OWNERSHIP)).ownerOf(id), "!owner");
+        Attr memory attr = attrs[id];
+        require(isValidClass(attr.class), "!valid");
+        ICodexEquipment.formula memory fml = get_formula(attr.obj_id, attr.class);
+		uint256 element = IMetaDataTeller(registry.addressOf(CONTRACT_METADATA_TELLER)).getPrefer(fml.minor, _token);
+		require(element > 0 && element < 6, "!token");
+		uint8 prefer = uint8(1 << element);
+        require(attr.prefer & prefer > 0, "!ele");
+        require(IERC20(_token).transferFrom(msg.sender, address(this), fml.cost));
+        _increase_class(id);
+    }
+
+    function get_formula(uint _obj_id, uint _class) public view returns (ICodexEquipment.formula memory _f) {
+        if (_obj_id == 1) {
+            _f = ICodexEquipment(registry.addressOf(CONTRACT_SWORD_CODEX)).formula_by_class(_class);
+        } else if (_obj_id == 2) {
+            _f = ICodexEquipment(registry.addressOf(CONTRACT_SHIELD_CODEX)).formula_by_class(_class);
+        }
+    }
+
+    // buy
+    function _pay_ring() private {
+        address ring = registry.addressOf(CONTRACT_RING_ERC20_TOKEN);
+        uint256 value = registry.uintOf(UINT_CRAFT_FEE);
+        require(IERC20(ring).transferFrom(msg.sender, address(this), value));
+        address pool = registry.addressOf(CONTRACT_REVENUE_POOL);
+        IERC20(ring).approve(pool, value);
+        IRevenuePool(pool).reward(ring, value, msg.sender);
     }
 }

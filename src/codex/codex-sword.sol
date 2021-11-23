@@ -5,6 +5,9 @@ contract codex {
     string constant public index = "Equipment";
     string constant public class = "Sword";
 
+	bytes32 public constant CONTRACT_ELEMENT_TOKEN = "CONTRACT_ELEMENT_TOKEN";
+	bytes32 public constant CONTRACT_LP_ELEMENT_TOKEN = "CONTRACT_LP_ELEMENT_TOKEN";
+
     struct sword {
         uint256 id;
         uint256[] materials;
@@ -14,7 +17,7 @@ contract codex {
         string name;
     }
 
-    function obj_by_id(uint id) public pure returns (sword memory _s) {
+    function obj_by_rarity(uint id) public pure returns (sword memory _s) {
         if (id == 1) {
             return sword1();
         } else if (id == 2) {
@@ -61,5 +64,31 @@ contract codex {
         _s.mcosts[1] = 30e18;
         _s.ecost = 320e18;
         _s.srate = 30;
+    }
+
+    struct formula {
+        bytes32 minor;
+        uint256 cost;
+        uint256 srate;
+    }
+
+    function formula_by_class(uint id) public pure returns (formula memory _f) {
+        if (id == 0) {
+            return formula0();
+        } else if (id == 1) {
+            return formula1();
+        }
+    }
+
+    function formula0() public pure returns (formula memory _f) {
+        _f.minor = CONTRACT_ELEMENT_TOKEN;
+        _f.cost = 400e18;
+        _f.srate = 100;
+    }
+
+    function formula1() public pure returns (formula memory _f) {
+        _f.minor = CONTRACT_LP_ELEMENT_TOKEN;
+        _f.cost = 800e18;
+        _f.srate = 100;
     }
 }
