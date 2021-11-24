@@ -85,7 +85,6 @@ contract CraftBase is Initializable, DSStop {
     }
 
     // crafting
-
     function craft(uint8 _obj_id, uint8 _rarity, address _element) external stoppable returns (bool crafted, uint tokenId) {
         require(isValid(_obj_id, _rarity), "!valid");
         ICodexEquipment.equipment memory e = get_obj(_obj_id, _rarity);
