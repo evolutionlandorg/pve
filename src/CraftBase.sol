@@ -59,7 +59,7 @@ contract CraftBase is Initializable, DSStop {
     }
 
     function _craft_check(uint _srate) private view returns (bool) {
-        address random = registry.addressOf(CONTRACT_LAND_BASE);
+        address random = registry.addressOf(CONTRACT_RANDOM_CODEX);
         return ICodexRandom(random).d100(lastEquipmentId) < _srate;
     }
 
@@ -148,24 +148,20 @@ contract CraftBase is Initializable, DSStop {
     }
 
     // buy
-    function buy(uint8 _obj_id, uint8 _rarity, uint256 _ele) public returns (uint) {
+    function buy(uint8 _obj_id, uint256 _ele) public returns (uint) {
 		require(_ele > 0 && _ele < 6, "!ele");
-        require(isValid(_obj_id, _rarity), "!valid");
-        uint256 price = get_price(_obj_id, _rarity);
+        require(isValid(_obj_id, 1), "!valid");
+        uint256 price = get_price();
         address ring = registry.addressOf(CONTRACT_RING_ERC20_TOKEN);
         require(IERC20(ring).transferFrom(msg.sender, address(this), price));
         address pool = registry.addressOf(CONTRACT_REVENUE_POOL);
         IERC20(ring).approve(pool, price);
         IRevenuePool(pool).reward(ring, price, msg.sender);
 		uint8 prefer = uint8(1 << _ele);
-        return _craft_obj(msg.sender, _obj_id, _rarity, prefer);
+        return _craft_obj(msg.sender, _obj_id, 1, prefer);
     }
 
-    function get_price(uint _obj_id, uint _rarity) public view returns (uint) {
-        if (_obj_id == 1) {
-            return ICodexEquipment(registry.addressOf(CONTRACT_SWORD_CODEX)).price_by_rarity(_rarity);
-        } else if (_obj_id == 2) {
-            return ICodexEquipment(registry.addressOf(CONTRACT_SHIELD_CODEX)).price_by_rarity(_rarity);
-        }
+    function get_price() public pure returns (uint) {
+        return 1000e18;
     }
 }
