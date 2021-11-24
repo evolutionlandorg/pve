@@ -16,19 +16,19 @@ import "./interfaces/IMaterial.sol";
 import "./interfaces/ILandBase.sol";
 
 contract CraftBase is Initializable, DSStop {
-	event Crafted(address to, uint256 tokenId, uint256 obj_id, uint256 rarity, uint256 timestamp);
+    event Crafted(address to, uint256 tokenId, uint256 obj_id, uint256 rarity, uint256 timestamp);
     event Enchanced(uint256 id, uint8 class, uint256 timestamp);
 
     bytes32 private constant CONTRACT_MATERIAL = "CONTRACT_MATERIAL";
-	bytes32 private constant CONTRACT_LAND_BASE = "CONTRACT_LAND_BASE";
-	bytes32 private constant CONTRACT_SWORD_CODEX = "CONTRACT_SWORD_CODEX";
-	bytes32 private constant CONTRACT_SHIELD_CODEX = "CONTRACT_SHIELD_CODEX";
-	bytes32 private constant CONTRACT_RANDOM_CODEX = "CONTRACT_RANDOM_CODEX";
-	bytes32 private constant CONTRACT_OBJECT_OWNERSHIP = "CONTRACT_OBJECT_OWNERSHIP";
-	bytes32 private constant CONTRACT_RING_ERC20_TOKEN = "CONTRACT_RING_ERC20_TOKEN";
+    bytes32 private constant CONTRACT_LAND_BASE = "CONTRACT_LAND_BASE";
+    bytes32 private constant CONTRACT_SWORD_CODEX = "CONTRACT_SWORD_CODEX";
+    bytes32 private constant CONTRACT_SHIELD_CODEX = "CONTRACT_SHIELD_CODEX";
+    bytes32 private constant CONTRACT_RANDOM_CODEX = "CONTRACT_RANDOM_CODEX";
+    bytes32 private constant CONTRACT_OBJECT_OWNERSHIP = "CONTRACT_OBJECT_OWNERSHIP";
+    bytes32 private constant CONTRACT_RING_ERC20_TOKEN = "CONTRACT_RING_ERC20_TOKEN";
     bytes32 private constant CONTRACT_REVENUE_POOL = "CONTRACT_REVENUE_POOL";
-	bytes32 private constant CONTRACT_METADATA_TELLER = "CONTRACT_METADATA_TELLER";
-	bytes4 private constant _SELECTOR_TRANSFERFROM = bytes4(keccak256(bytes("transferFrom(address,address,uint256)")));
+    bytes32 private constant CONTRACT_METADATA_TELLER = "CONTRACT_METADATA_TELLER";
+    bytes4 private constant _SELECTOR_TRANSFERFROM = bytes4(keccak256(bytes("transferFrom(address,address,uint256)")));
 
     struct Attr {
         uint8 obj_id;
@@ -37,17 +37,17 @@ contract CraftBase is Initializable, DSStop {
         uint8 prefer;
     }
 
-	/*** STORAGE ***/
-	ISettingsRegistry public registry;
+    /*** STORAGE ***/
+    ISettingsRegistry public registry;
     uint256 public lastEquipmentId;
     mapping(uint256 => Attr) public attrs;
 
-	function initialize(address _registry) public initializer {
-		owner = msg.sender;
-		emit LogSetOwner(msg.sender);
+    function initialize(address _registry) public initializer {
+        owner = msg.sender;
+        emit LogSetOwner(msg.sender);
 
-		registry = ISettingsRegistry(_registry);
-	}
+        registry = ISettingsRegistry(_registry);
+    }
 
     function _pay_materails(uint256[] memory materials, uint256[] memory mcosts) private {
         address m = registry.addressOf(CONTRACT_MATERIAL);
@@ -65,18 +65,18 @@ contract CraftBase is Initializable, DSStop {
 
     function _pay_element(address element, uint256 value) private returns (uint8 prefer) {
         uint256 ele = ILandBase(registry.addressOf(CONTRACT_LAND_BASE)).resourceToken2RateAttrId(element);
-		require(ele > 0 && ele < 6, "!element");
-		prefer = uint8(1 << ele);
+        require(ele > 0 && ele < 6, "!element");
+        prefer = uint8(1 << ele);
         require(IERC20(element).transferFrom(msg.sender, address(this), value));
     }
 
     function _craft_obj(address _to, uint8 _obj_id, uint8 _rarity, uint8 _prefer) private returns (uint) {
         require(lastEquipmentId < uint128(-1), "overflow");
         lastEquipmentId += 1;
-		uint256 tokenId = IObjectOwnership(registry.addressOf(CONTRACT_OBJECT_OWNERSHIP)).mintObject(_to, uint128(lastEquipmentId));
+        uint256 tokenId = IObjectOwnership(registry.addressOf(CONTRACT_OBJECT_OWNERSHIP)).mintObject(_to, uint128(lastEquipmentId));
         attrs[tokenId] = Attr(_obj_id, _rarity, 0, _prefer);
-		emit Crafted(_to, tokenId, _obj_id, _rarity, block.timestamp);
-		return tokenId;
+        emit Crafted(_to, tokenId, _obj_id, _rarity, block.timestamp);
+        return tokenId;
     }
 
     function _increase_class(uint id) private {
@@ -127,13 +127,13 @@ contract CraftBase is Initializable, DSStop {
 
     // enchanting
     function enchant(uint id, address _token) external returns (bool) {
-		require(msg.sender == IERC721(registry.addressOf(CONTRACT_OBJECT_OWNERSHIP)).ownerOf(id), "!owner");
+        require(msg.sender == IERC721(registry.addressOf(CONTRACT_OBJECT_OWNERSHIP)).ownerOf(id), "!owner");
         Attr memory attr = attrs[id];
         require(isValidClass(attr.class), "!valid");
         ICodexEquipment.formula memory fml = get_formula(attr.obj_id, attr.class);
-		uint256 element = IMetaDataTeller(registry.addressOf(CONTRACT_METADATA_TELLER)).getPrefer(fml.minor, _token);
-		require(element > 0 && element < 6, "!token");
-		uint8 prefer = uint8(1 << element);
+        uint256 element = IMetaDataTeller(registry.addressOf(CONTRACT_METADATA_TELLER)).getPrefer(fml.minor, _token);
+        require(element > 0 && element < 6, "!token");
+        uint8 prefer = uint8(1 << element);
         require(attr.prefer & prefer > 0, "!ele");
         require(IERC20(_token).transferFrom(msg.sender, address(this), fml.cost));
         _increase_class(id);
@@ -149,7 +149,7 @@ contract CraftBase is Initializable, DSStop {
 
     // buy
     function buy(uint8 _obj_id, uint256 _ele) public returns (uint) {
-		require(_ele > 0 && _ele < 6, "!ele");
+        require(_ele > 0 && _ele < 6, "!ele");
         require(isValid(_obj_id, 1), "!valid");
         uint256 price = get_price();
         address ring = registry.addressOf(CONTRACT_RING_ERC20_TOKEN);
@@ -157,7 +157,7 @@ contract CraftBase is Initializable, DSStop {
         address pool = registry.addressOf(CONTRACT_REVENUE_POOL);
         IERC20(ring).approve(pool, price);
         IRevenuePool(pool).reward(ring, price, msg.sender);
-		uint8 prefer = uint8(1 << _ele);
+        uint8 prefer = uint8(1 << _ele);
         return _craft_obj(msg.sender, _obj_id, 1, prefer);
     }
 
