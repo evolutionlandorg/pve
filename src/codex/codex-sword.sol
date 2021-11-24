@@ -1,7 +1,7 @@
 pragma solidity ^0.6.7;
 pragma experimental ABIEncoderV2;
 
-contract codex {
+contract CodexSword {
     string constant public index = "Equipment";
     string constant public class = "Sword";
 
