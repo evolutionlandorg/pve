@@ -42,6 +42,11 @@ contract CraftBase is Initializable, DSStop {
     uint256 public lastEquipmentId;
     mapping(uint256 => Attr) public attrs;
 
+    modifier isHuman() {
+        require(msg.sender == tx.origin, "robot is not permitted");
+        _;
+    }
+
     function initialize(address _registry) public initializer {
         owner = msg.sender;
         emit LogSetOwner(msg.sender);
@@ -85,7 +90,7 @@ contract CraftBase is Initializable, DSStop {
     }
 
     // crafting
-    function craft(uint8 _obj_id, uint8 _rarity, address _element) external stoppable returns (bool crafted, uint tokenId) {
+    function craft(uint8 _obj_id, uint8 _rarity, address _element) external stoppable isHuman returns (bool crafted, uint tokenId) {
         require(isValid(_obj_id, _rarity), "!valid");
         ICodexEquipment.equipment memory e = get_obj(_obj_id, _rarity);
         _pay_materails(e.materials, e.mcosts);
