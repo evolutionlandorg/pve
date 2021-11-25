@@ -16,7 +16,7 @@ import "./interfaces/IMaterial.sol";
 import "./interfaces/ILandBase.sol";
 
 contract CraftBase is Initializable, DSStop {
-    event Crafted(address to, uint256 tokenId, uint256 obj_id, uint256 rarity, uint256 timestamp);
+    event Crafted(address to, uint256 tokenId, uint256 obj_id, uint256 rarity, uint256 prefer, uint256 timestamp);
     event Enchanced(uint256 id, uint8 class, uint256 timestamp);
 
     bytes32 private constant CONTRACT_MATERIAL = "CONTRACT_MATERIAL";
@@ -80,7 +80,7 @@ contract CraftBase is Initializable, DSStop {
         lastEquipmentId += 1;
         uint256 tokenId = IObjectOwnership(registry.addressOf(CONTRACT_OBJECT_OWNERSHIP)).mintObject(_to, uint128(lastEquipmentId));
         attrs[tokenId] = Attr(_obj_id, _rarity, 0, _prefer);
-        emit Crafted(_to, tokenId, _obj_id, _rarity, block.timestamp);
+        emit Crafted(_to, tokenId, _obj_id, _rarity, _prefer, block.timestamp);
         return tokenId;
     }
 
@@ -150,23 +150,5 @@ contract CraftBase is Initializable, DSStop {
         } else if (_obj_id == 2) {
             _f = ICodexEquipment(registry.addressOf(CONTRACT_SHIELD_CODEX)).formula_by_class(_class);
         }
-    }
-
-    // buy
-    function buy(uint8 _obj_id, uint256 _ele) public returns (uint) {
-        require(_ele > 0 && _ele < 6, "!ele");
-        require(isValid(_obj_id, 1), "!valid");
-        uint256 price = get_price();
-        address ring = registry.addressOf(CONTRACT_RING_ERC20_TOKEN);
-        require(IERC20(ring).transferFrom(msg.sender, address(this), price));
-        address pool = registry.addressOf(CONTRACT_REVENUE_POOL);
-        IERC20(ring).approve(pool, price);
-        IRevenuePool(pool).reward(ring, price, msg.sender);
-        uint8 prefer = uint8(1 << _ele);
-        return _craft_obj(msg.sender, _obj_id, 1, prefer);
-    }
-
-    function get_price() public pure returns (uint) {
-        return 1000e18;
     }
 }
