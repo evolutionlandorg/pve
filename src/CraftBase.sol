@@ -89,8 +89,16 @@ contract CraftBase is Initializable, DSStop {
         emit Enchanced(id, attrs[id].class, block.timestamp);
     }
 
+    function craft_batch(uint8[] calldata _obj_ids, uint8[] calldata _raritys, address[] calldata _elements) external {
+        require(_obj_ids.length == _raritys.length, "!len");
+        require(_obj_ids.length == _elements.length, "!len");
+        for(uint i=0; i< _obj_ids.length; i++) {
+            craft(_obj_ids[i], _raritys[i], _elements[i]);
+        }
+    }
+
     // crafting
-    function craft(uint8 _obj_id, uint8 _rarity, address _element) external stoppable isHuman returns (bool crafted, uint tokenId) {
+    function craft(uint8 _obj_id, uint8 _rarity, address _element) public stoppable isHuman returns (bool crafted, uint tokenId) {
         require(isValid(_obj_id, _rarity), "!valid");
         ICodexEquipment.equipment memory e = get_obj(_obj_id, _rarity);
         _pay_materails(e.materials, e.mcosts);
