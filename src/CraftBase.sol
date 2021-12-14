@@ -153,8 +153,8 @@ contract CraftBase is Initializable, DSStop {
         uint8 prefer = uint8(ICodexPrefer(registry.addressOf(CONTRACT_PREFER_CODEX)).getPrefer(fml.minor, _token));
         require(prefer > 0, "!prefer");
         require(attr.prefer == prefer, "!ele");
-        require(IERC20(_token).transferFrom(msg.sender, address(this), fml.cost));
         _increase_class(id);
+        require(IERC20(_token).transferFrom(msg.sender, address(this), fml.cost));
     }
 
     function disenchant(uint256 id) external stoppable returns (bool) {
@@ -163,9 +163,9 @@ contract CraftBase is Initializable, DSStop {
         require(attr.class > 0, "!class");
         ICodexEquipment.formula memory fml = get_formula(attr.obj_id, attr.class - 1);
         address ele = ICodexPrefer(registry.addressOf(CONTRACT_PREFER_CODEX)).getElement(fml.minor, attr.prefer);
+        _decrease_class(id);
         uint256 value = fml.cost * fml.lrate / 100;
         require(IERC20(ele).transfer(msg.sender, value));
-        _decrease_class(id);
     }
 
     function get_formula(uint _obj_id, uint _class) public view returns (ICodexEquipment.formula memory _f) {
