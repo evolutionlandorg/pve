@@ -15,17 +15,17 @@ contract CodexPrefer {
     bytes32 public constant CONTRACT_FIRE_ERC20_TOKEN = "CONTRACT_FIRE_ERC20_TOKEN";
     bytes32 public constant CONTRACT_SOIL_ERC20_TOKEN = "CONTRACT_SOIL_ERC20_TOKEN";
 
-	bytes32 public constant CONTRACT_LP_GOLD_ERC20_TOKEN = "CONTRACT_LP_GOLD_ERC20_TOKEN";
-	bytes32 public constant CONTRACT_LP_WOOD_ERC20_TOKEN = "CONTRACT_LP_WOOD_ERC20_TOKEN";
-	bytes32 public constant CONTRACT_LP_WATER_ERC20_TOKEN = "CONTRACT_LP_WATER_ERC20_TOKEN";
-	bytes32 public constant CONTRACT_LP_FIRE_ERC20_TOKEN = "CONTRACT_LP_FIRE_ERC20_TOKEN";
-	bytes32 public constant CONTRACT_LP_SOIL_ERC20_TOKEN = "CONTRACT_LP_SOIL_ERC20_TOKEN";
+    bytes32 public constant CONTRACT_LP_GOLD_ERC20_TOKEN = "CONTRACT_LP_GOLD_ERC20_TOKEN";
+    bytes32 public constant CONTRACT_LP_WOOD_ERC20_TOKEN = "CONTRACT_LP_WOOD_ERC20_TOKEN";
+    bytes32 public constant CONTRACT_LP_WATER_ERC20_TOKEN = "CONTRACT_LP_WATER_ERC20_TOKEN";
+    bytes32 public constant CONTRACT_LP_FIRE_ERC20_TOKEN = "CONTRACT_LP_FIRE_ERC20_TOKEN";
+    bytes32 public constant CONTRACT_LP_SOIL_ERC20_TOKEN = "CONTRACT_LP_SOIL_ERC20_TOKEN";
 
-	uint256 public constant PREFER_GOLD = 1 << 1;
-	uint256 public constant PREFER_WOOD = 1 << 2;
-	uint256 public constant PREFER_WATER = 1 << 3;
-	uint256 public constant PREFER_FIRE = 1 << 4;
-	uint256 public constant PREFER_SOIL = 1 << 5;
+    uint256 public constant PREFER_GOLD = 1 << 1;
+    uint256 public constant PREFER_WOOD = 1 << 2;
+    uint256 public constant PREFER_WATER = 1 << 3;
+    uint256 public constant PREFER_FIRE = 1 << 4;
+    uint256 public constant PREFER_SOIL = 1 << 5;
 
     ISettingsRegistry public registry;
     mapping(bytes32 => mapping(address => uint256)) public prefers;
