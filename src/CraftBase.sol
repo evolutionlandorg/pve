@@ -164,7 +164,7 @@ contract CraftBase is Initializable, DSStop {
         ICodexEquipment.formula memory fml = get_formula(attr.obj_id, attr.class - 1);
         address ele = ICodexPrefer(registry.addressOf(CONTRACT_PREFER_CODEX)).getElement(fml.minor, attr.prefer);
         uint256 value = fml.cost * fml.lrate / 100;
-        require(IERC20(ele).transferFrom(address(this), msg.sender, value));
+        require(IERC20(ele).transfer(msg.sender, value));
         _decrease_class(id);
     }
 
