@@ -157,7 +157,7 @@ contract CraftBase is Initializable, DSStop {
         _increase_class(id);
     }
 
-	function disenchant(uint256 id) external stoppable returns (bool) {
+    function disenchant(uint256 id) external stoppable returns (bool) {
         require(msg.sender == IERC721(registry.addressOf(CONTRACT_OBJECT_OWNERSHIP)).ownerOf(id), "!owner");
         Attr memory attr = attrs[id];
         require(attr.class > 0, "!class");
