@@ -2,7 +2,7 @@ pragma solidity ^0.6.7;
 
 import "../interfaces/ISettingsRegistry.sol";
 
-contract CodexElement {
+contract CodexPrefer {
     string constant public index = "Base";
     string constant public class = "Prefer";
 
