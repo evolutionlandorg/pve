@@ -70,6 +70,7 @@ contract CodexSword {
         bytes32 minor;
         uint256 cost;
         uint256 srate;
+        uint256 lrate;
     }
 
     function formula_by_class(uint id) public pure returns (formula memory _f) {
@@ -84,11 +85,13 @@ contract CodexSword {
         _f.minor = CONTRACT_ELEMENT_TOKEN;
         _f.cost = 400e18;
         _f.srate = 100;
+        _f.lrate = 500;
     }
 
     function formula1() public pure returns (formula memory _f) {
         _f.minor = CONTRACT_LP_ELEMENT_TOKEN;
         _f.cost = 800e18;
         _f.srate = 100;
+        _f.lrate = 50;
     }
 }

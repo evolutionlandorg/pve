@@ -9,25 +9,27 @@ import "ds-stop/stop.sol";
 import "./interfaces/ISettingsRegistry.sol";
 import "./interfaces/IObjectOwnership.sol";
 import "./interfaces/ICodexEquipment.sol";
-import "./interfaces/IMetaDataTeller.sol";
 import "./interfaces/ICodexRandom.sol";
+import "./interfaces/ICodexPrefer.sol";
 import "./interfaces/IRevenuePool.sol";
 import "./interfaces/IMaterial.sol";
-import "./interfaces/ILandBase.sol";
 
 contract CraftBase is Initializable, DSStop {
     event Crafted(address to, uint256 tokenId, uint256 obj_id, uint256 rarity, uint256 prefer, uint256 timestamp);
     event Enchanced(uint256 id, uint8 class, uint256 timestamp);
+    event Disenchanted(uint256 id, uint8 class, uint256 timestamp);
 
     bytes32 private constant CONTRACT_MATERIAL = "CONTRACT_MATERIAL";
     bytes32 private constant CONTRACT_LAND_BASE = "CONTRACT_LAND_BASE";
     bytes32 private constant CONTRACT_SWORD_CODEX = "CONTRACT_SWORD_CODEX";
     bytes32 private constant CONTRACT_SHIELD_CODEX = "CONTRACT_SHIELD_CODEX";
     bytes32 private constant CONTRACT_RANDOM_CODEX = "CONTRACT_RANDOM_CODEX";
+    bytes32 private constant CONTRACT_PREFER_CODEX = "CONTRACT_PREFER_CODEX";
     bytes32 private constant CONTRACT_OBJECT_OWNERSHIP = "CONTRACT_OBJECT_OWNERSHIP";
     bytes32 private constant CONTRACT_RING_ERC20_TOKEN = "CONTRACT_RING_ERC20_TOKEN";
     bytes32 private constant CONTRACT_REVENUE_POOL = "CONTRACT_REVENUE_POOL";
     bytes32 private constant CONTRACT_METADATA_TELLER = "CONTRACT_METADATA_TELLER";
+    bytes32 private constant CONTRACT_ELEMENT_TOKEN = "CONTRACT_ELEMENT_TOKEN";
     bytes4 private constant _SELECTOR_TRANSFERFROM = bytes4(keccak256(bytes("transferFrom(address,address,uint256)")));
 
     struct Attr {
@@ -69,9 +71,8 @@ contract CraftBase is Initializable, DSStop {
     }
 
     function _pay_element(address element, uint256 value) private returns (uint8 prefer) {
-        uint256 ele = ILandBase(registry.addressOf(CONTRACT_LAND_BASE)).resourceToken2RateAttrId(element);
-        require(ele > 0 && ele < 6, "!element");
-        prefer = uint8(1 << ele);
+        prefer = uint8(ICodexPrefer(registry.addressOf(CONTRACT_PREFER_CODEX)).getPrefer(CONTRACT_ELEMENT_TOKEN, element));
+        require(prefer > 0, "!prefer");
         require(IERC20(element).transferFrom(msg.sender, address(this), value));
     }
 
@@ -87,6 +88,11 @@ contract CraftBase is Initializable, DSStop {
     function _increase_class(uint id) private {
         attrs[id].class += 1;
         emit Enchanced(id, attrs[id].class, block.timestamp);
+    }
+
+    function _decrease_class(uint id) private {
+        attrs[id].class -= 1;
+        emit Disenchanted(id, attrs[id].class, block.timestamp);
     }
 
     function craft_batch(uint8[] calldata _obj_ids, uint8[] calldata _raritys, address[] calldata _elements) external {
@@ -139,17 +145,27 @@ contract CraftBase is Initializable, DSStop {
     }
 
     // enchanting
-    function enchant(uint id, address _token) external returns (bool) {
+    function enchant(uint id, address _token) external stoppable returns (bool) {
         require(msg.sender == IERC721(registry.addressOf(CONTRACT_OBJECT_OWNERSHIP)).ownerOf(id), "!owner");
         Attr memory attr = attrs[id];
         require(isValidClass(attr.class), "!valid");
         ICodexEquipment.formula memory fml = get_formula(attr.obj_id, attr.class);
-        uint256 element = IMetaDataTeller(registry.addressOf(CONTRACT_METADATA_TELLER)).getPrefer(fml.minor, _token);
-        require(element > 0 && element < 6, "!token");
-        uint8 prefer = uint8(1 << element);
-        require(attr.prefer & prefer > 0, "!ele");
+        uint8 prefer = uint8(ICodexPrefer(registry.addressOf(CONTRACT_PREFER_CODEX)).getPrefer(fml.minor, _token));
+        require(prefer > 0, "!prefer");
+        require(attr.prefer == prefer, "!ele");
         require(IERC20(_token).transferFrom(msg.sender, address(this), fml.cost));
         _increase_class(id);
+    }
+
+	function disenchant(uint256 id) external stoppable returns (bool) {
+        require(msg.sender == IERC721(registry.addressOf(CONTRACT_OBJECT_OWNERSHIP)).ownerOf(id), "!owner");
+        Attr memory attr = attrs[id];
+        require(attr.class > 0, "!class");
+        ICodexEquipment.formula memory fml = get_formula(attr.obj_id, attr.class - 1);
+        address ele = ICodexPrefer(registry.addressOf(CONTRACT_PREFER_CODEX)).getElement(fml.minor, attr.prefer);
+        uint256 value = fml.cost * fml.lrate / 100;
+        require(IERC20(ele).transferFrom(address(this), msg.sender, value));
+        _decrease_class(id);
     }
 
     function get_formula(uint _obj_id, uint _class) public view returns (ICodexEquipment.formula memory _f) {

@@ -69,6 +69,8 @@ contract CodexShield {
     struct formula {
         bytes32 minor;
         uint256 cost;
+        uint256 srate;
+        uint256 lrate;
     }
 
     function formula_by_class(uint id) public pure returns (formula memory _f) {
@@ -82,10 +84,14 @@ contract CodexShield {
     function formula0() public pure returns (formula memory _f) {
         _f.minor = CONTRACT_ELEMENT_TOKEN;
         _f.cost = 400e18;
+        _f.srate = 100;
+        _f.lrate = 50;
     }
 
     function formula1() public pure returns (formula memory _f) {
         _f.minor = CONTRACT_LP_ELEMENT_TOKEN;
         _f.cost = 800e18;
+        _f.srate = 100;
+        _f.lrate = 50;
     }
 }

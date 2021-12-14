@@ -14,6 +14,8 @@ interface ICodexEquipment {
     struct formula {
         bytes32 minor;
         uint256 cost;
+        uint256 srate;
+        uint256 lrate;
     }
 
     function obj_by_rarity(uint rarity) external pure returns (equipment memory _e);
