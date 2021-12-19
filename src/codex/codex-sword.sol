@@ -34,8 +34,8 @@ contract CodexSword {
         _s.materials[0] = 1;
         _s.materials[1] = 4;
         _s.mcosts = new uint256[](2);
-        _s.mcosts[0] = 100e18;
-        _s.mcosts[1] = 30e18;
+        _s.mcosts[0] = 100;
+        _s.mcosts[1] = 30;
         _s.ecost = 80e18;
         _s.srate = 90;
     }
@@ -47,8 +47,8 @@ contract CodexSword {
         _s.materials[0] = 1;
         _s.materials[1] = 4;
         _s.mcosts = new uint256[](2);
-        _s.mcosts[0] = 200e18;
-        _s.mcosts[1] = 60e18;
+        _s.mcosts[0] = 200;
+        _s.mcosts[1] = 60;
         _s.ecost = 160e18;
         _s.srate = 60;
     }
@@ -60,8 +60,8 @@ contract CodexSword {
         _s.materials[0] = 2;
         _s.materials[1] = 5;
         _s.mcosts = new uint256[](2);
-        _s.mcosts[0] = 100e18;
-        _s.mcosts[1] = 30e18;
+        _s.mcosts[0] = 100;
+        _s.mcosts[1] = 30;
         _s.ecost = 320e18;
         _s.srate = 30;
     }
