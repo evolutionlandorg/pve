@@ -65,9 +65,9 @@ contract CraftBase is Initializable, DSStop {
         IERC1155(m).safeBatchTransferFrom(msg.sender, address(this), ids, mcosts, "");
     }
 
-    function _craft_check(uint _srate) private view returns (bool) {
+    function _craft_check(uint _srate, uint _offset) private view returns (bool) {
         address random = registry.addressOf(CONTRACT_RANDOM_CODEX);
-        return ICodexRandom(random).d100(lastEquipmentId) < _srate;
+        return ICodexRandom(random).d100(lastEquipmentId + _offset) < _srate;
     }
 
     function _pay_element(address element, uint256 value) private returns (uint8 prefer) {
@@ -99,17 +99,21 @@ contract CraftBase is Initializable, DSStop {
         require(_obj_ids.length == _raritys.length, "!len");
         require(_obj_ids.length == _elements.length, "!len");
         for(uint i=0; i< _obj_ids.length; i++) {
-            craft(_obj_ids[i], _raritys[i], _elements[i]);
+            _craft(_obj_ids[i], _raritys[i], _elements[i], i);
         }
     }
 
     // crafting
     function craft(uint8 _obj_id, uint8 _rarity, address _element) public stoppable isHuman returns (bool crafted, uint tokenId) {
+        return _craft(_obj_id, _rarity, _element, 0);
+    }
+
+    function _craft(uint8 _obj_id, uint8 _rarity, address _element, uint256 offset) private returns (bool crafted, uint tokenId) {
         require(isValid(_obj_id, _rarity), "!valid");
         ICodexEquipment.equipment memory e = get_obj(_obj_id, _rarity);
         _pay_materails(e.materials, e.mcosts);
         uint8 prefer = _pay_element(_element, e.ecost);
-        crafted = _craft_check(e.srate);
+        crafted = _craft_check(e.srate, offset);
         if (crafted) {
             tokenId = _craft_obj(msg.sender, _obj_id, _rarity, prefer);
         }
