@@ -2,6 +2,7 @@ pragma solidity ^0.6.7;
 
 import "zeppelin-solidity/proxy/Initializable.sol";
 import "zeppelin-solidity/introspection/ERC165.sol";
+import "zeppelin-solidity/token/ERC721/IERC721.sol";
 import "ds-auth/auth.sol";
 import "./interfaces/ISettingsRegistry.sol";
 import "./interfaces/ITokenUse.sol";
@@ -13,6 +14,7 @@ contract PveTeam is Initializable, ERC165, DSAuth {
     bytes4 internal constant InterfaceId_IActivity = 0x6086e7f8;
     // 0x434f4e54524143545f544f4b454e5f5553450000000000000000000000000000
     bytes32 internal constant CONTRACT_TOKEN_USE = "CONTRACT_TOKEN_USE";
+    bytes32 internal constant CONTRACT_OBJECT_OWNERSHIP = "CONTRACT_OBJECT_OWNERSHIP";
 
     uint256 public constant TEAM_ID = 1;
     uint256 public constant MAX_TEAM_SIZE = 4;
@@ -81,8 +83,14 @@ contract PveTeam is Initializable, ERC165, DSAuth {
     }
 
     function exit(uint256 tokenId) public {
+        address ownership = registry.addressOf(CONTRACT_OBJECT_OWNERSHIP);
         address tokenuse = registry.addressOf(CONTRACT_TOKEN_USE);
-        ITokenUse(tokenuse).removeActivity(tokenId, msg.sender);
+        if (IERC721(ownership).ownerOf(tokenId) == msg.sender) {
+            ITokenUse(tokenuse).removeActivity(tokenId, msg.sender);
+        } else {
+            require(msg.sender == infos[tokenId].user, "Team: ONLY_USER");
+            ITokenUse(tokenuse).removeActivity(tokenId, address(0));
+        }
     }
 
     function swap(uint256 slot, uint256 newTokenId) public {
