@@ -179,4 +179,14 @@ contract CraftBase is Initializable, DSStop {
             _f = ICodexEquipment(registry.addressOf(CONTRACT_SHIELD_CODEX)).formula_by_class(_class);
         }
     }
+
+    function claimTokens(address _token) public auth {
+        if (_token == address(0x0)) {
+            payable(owner).transfer(address(this).balance);
+            return;
+        }
+        IERC20 token = IERC20(_token);
+        uint balance = token.balanceOf(address(this));
+        token.transfer(owner, balance);
+    }
 }
